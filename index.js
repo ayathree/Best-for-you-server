@@ -1,6 +1,6 @@
 const express = require( 'express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 
 const app = express();
@@ -42,6 +42,21 @@ async function run() {
     const result = await productsCollection.insertOne(productData)
     res.send(result)
  })
+ // get all products added by a spacific user
+ app.get('/products/:email',async(req,res)=>{
+  const email = req.params.email
+  const query = {'queryUser.email':email}
+  const result = await productsCollection.find(query).toArray()
+  res.send(result)
+})
+// get a single product data from db using id
+app.get('/product/:id', async(req,res)=>{
+  const id = req.params.id
+  const query = {_id: new ObjectId(id)}
+  const result = await productsCollection.findOne(query)
+  res.send(result)
+
+})
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
