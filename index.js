@@ -46,7 +46,9 @@ async function run() {
  app.get('/products/:email',async(req,res)=>{
   const email = req.params.email
   const query = {'queryUser.email':email}
-  const result = await productsCollection.find(query).toArray()
+
+  const result = await productsCollection.find(query).sort({ _id: -1 }).toArray()
+  
   res.send(result)
 })
 // get a single product data from db using id
