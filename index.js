@@ -42,6 +42,12 @@ async function run() {
     const result = await productsCollection.insertOne(productData)
     res.send(result)
  })
+ // get all the products
+ app.get('/products', async(req,res)=>{
+  const result =await productsCollection.find().sort({ _id: -1 }).toArray()
+  res.send(result)
+
+})
  // get all products added by a spacific user
  app.get('/products/:email',async(req,res)=>{
   const email = req.params.email
