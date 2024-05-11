@@ -66,6 +66,22 @@ app.delete('/product/:id',async(req,res)=>{
   const result = await productsCollection.deleteOne(query)
       res.send(result)
    })
+  //  update a product data 
+  app.put('/product/:id', async(req,res)=>{
+    const id = req.params.id
+    const productData = req.body
+    const query = {_id: new ObjectId(id)}
+    const options ={upsert:true}
+    const updateDoc={
+      $set:{
+        ...productData
+
+      }
+
+    }
+    const result = await productsCollection.updateOne(query, updateDoc,options)
+    res.send(result)
+  })
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
