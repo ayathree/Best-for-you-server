@@ -33,6 +33,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const productsCollection = client.db('alterDB').collection('products')
+    const recommendsCollection = client.db('alterDB').collection('recommend')
 
     // save a product data in database
    app.post('/products',async(req,res)=>{
@@ -88,6 +89,14 @@ app.delete('/product/:id',async(req,res)=>{
     const result = await productsCollection.updateOne(query, updateDoc,options)
     res.send(result)
   })
+  // save a recommend data in database
+  app.post('/recommend',async(req,res)=>{
+    const recommendData = req.body;
+    console.log(recommendData)
+    
+    const result = await recommendsCollection.insertOne(recommendData)
+    res.send(result)
+ })
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
