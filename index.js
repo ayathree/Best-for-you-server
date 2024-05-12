@@ -93,10 +93,34 @@ app.delete('/product/:id',async(req,res)=>{
   app.post('/recommend',async(req,res)=>{
     const recommendData = req.body;
     console.log(recommendData)
+    const query={
+      recommenderEmail: recommendData.recommenderEmail,
+      queryId: recommendData.queryId
+    }
+    const alreadyRecommend= await recommendsCollection.findOne(query)
+    if (alreadyRecommend) {
+      
+      return res.send('Action not permitted')
+      
+    }
+
+    
+    
     
     const result = await recommendsCollection.insertOne(recommendData)
+    
+    
+    const recoQuery = {_id:new ObjectId(recommendData.queryId)}
+    const updateRecoCount = await productsCollection.updateOne(recoQuery,{ $inc: { recommendationCount: 1 } })
+    console.log(updateRecoCount)
+    
     res.send(result)
+
  })
+
+
+
+
  // get all recommend for a spacific data
  app.get('/recommend/:id', async(req,res)=>{
   const id = req.params.id
