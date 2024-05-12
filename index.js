@@ -129,6 +129,40 @@ app.delete('/product/:id',async(req,res)=>{
   res.send(result)
 
 })
+// get all recommend of a spacific user
+app.get('/my-recommend/:email',async(req,res)=>{
+  const email = req.params.email
+ 
+  const query = {'recommenderEmail': email}
+ 
+
+  const result = await recommendsCollection.find(query).toArray()
+ 
+  
+  res.send(result)
+})
+// delete recommend data from db
+app.delete('/recommend/:id',async(req,res)=>{
+  const id = req.params.id
+  const query = {_id: new ObjectId(id)}
+  const result = await recommendsCollection.deleteOne(query)
+  // const recoQuery = {_id:new ObjectId(id)}
+    const updateRecoCount = await productsCollection.updateOne(query,{ $inc: { recommendationCount: -1 } })
+    console.log(updateRecoCount)
+      res.send(result)
+   })
+   // get all recommends by others for a user
+app.get('/all-recommend/:email',async(req,res)=>{
+  const email = req.params.email
+ 
+  const query = {'userEmail':email}
+ 
+
+  const result = await recommendsCollection.find(query).toArray()
+ 
+  
+  res.send(result)
+})
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
