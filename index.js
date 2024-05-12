@@ -97,6 +97,14 @@ app.delete('/product/:id',async(req,res)=>{
     const result = await recommendsCollection.insertOne(recommendData)
     res.send(result)
  })
+ // get all recommend for a spacific data
+ app.get('/recommend/:id', async(req,res)=>{
+  const id = req.params.id
+  const query = {'queryId':id}
+  const result = await recommendsCollection.find(query).toArray()
+  res.send(result)
+
+})
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
