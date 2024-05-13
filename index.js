@@ -91,7 +91,7 @@ async function run() {
  })
  // get all the products
  app.get('/products', async(req,res)=>{
- 
+  
   const result =await productsCollection.find().sort({ _id: -1 }).toArray()
   res.send(result)
   
