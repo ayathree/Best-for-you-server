@@ -101,9 +101,13 @@ async function run() {
   // const token = req.cookies?.token
   
   // console.log(token)
-  const tokenData = req.user
-  console.log(tokenData, 'from token')
+  const tokenEmail = req.user.email
+  console.log(tokenEmail, 'from token')
   const email = req.params.email
+  if (tokenEmail !== email) {
+    return res.status(403).send({message: 'forbidden access'})
+    
+  }
   const query = {'queryUser.email':email}
 
   const result = await productsCollection.find(query).sort({ _id: -1 }).toArray()
@@ -190,9 +194,14 @@ app.delete('/product/:id',async(req,res)=>{
 })
 // get all recommend of a spacific user
 app.get('/my-recommend/:email',verifyToken,async(req,res)=>{
-  const tokenData = req.user
-  console.log(tokenData, 'my recommend')
+  const tokenEmail = req.user.email
+  console.log(tokenEmail, 'from reco')
   const email = req.params.email
+  if (tokenEmail !== email) {
+    return res.status(403).send({message: 'forbidden access'})
+    
+  }
+  // const email = req.params.email
  
   const query = {'recommenderEmail': email}
  
@@ -214,9 +223,13 @@ app.delete('/recommend/:id',async(req,res)=>{
    })
    // get all recommends by others for a user
 app.get('/all-recommend/:email', verifyToken,async(req,res)=>{
-  const tokenData = req.user
-  console.log(tokenData, 'from recommend')
+  const tokenEmail = req.user.email
+  console.log(tokenEmail, 'from allreco')
   const email = req.params.email
+  if (tokenEmail !== email) {
+    return res.status(403).send({message: 'forbidden access'})
+    
+  }
  
   const query = {'userEmail':email}
  
