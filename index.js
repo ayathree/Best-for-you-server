@@ -1,5 +1,7 @@
 const express = require( 'express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 
@@ -9,14 +11,34 @@ const port = process.env.PORT || 5000;
 // middleware
 
 const corsOptions ={
-    origin:["http://localhost:5173", "http://localhost:5174"],
+    origin:["http://localhost:5173", "http://localhost:5174",'https://best-for-you-2df59.web.app','https://best-for-you-2df59.firebaseapp.com'],
     credentials: true,
     optionSuccessStatus: 200
 
 }
   app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser())
 
+// verify jwt middleware
+const verifyToken=(req,res,next)=>{
+  const token =req.cookies?.token
+  if (!token) return res.status(401).send({message: 'unauthorized access'})
+  if (token) {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET,(err, decoded)=>{
+      if(err){
+        console.log(err)
+        return res.status(401).send({message: 'unauthorized access'})
+      }
+      console.log(decoded)
+      req.user= decoded
+      next()
+    })
+    
+  }
+  console.log(token)
+  
+}
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ycbv1lf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -35,8 +57,32 @@ async function run() {
     const productsCollection = client.db('alterDB').collection('products')
     const recommendsCollection = client.db('alterDB').collection('recommend')
 
+    // jwt
+    app.post('/jwt', async(req,res)=>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET,{expiresIn:'365d'})
+      res.cookie('token', token,{
+        httpOnly:true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite : process.env.NODE_ENV === 'production'?'none':'strict'
+      }).send({success:true})
+    })
+
+    // clear a token when logout
+    app.get('/logout',(req,res)=>{
+      res.clearCookie('token',{
+        httpOnly:true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite : process.env.NODE_ENV === 'production'?'none':'strict',
+        maxAge:0,
+      }).send({success:true})
+
+    })
+
+
     // save a product data in database
    app.post('/products',async(req,res)=>{
+    
     const productData = req.body;
     console.log(productData)
     
@@ -45,12 +91,18 @@ async function run() {
  })
  // get all the products
  app.get('/products', async(req,res)=>{
+ 
   const result =await productsCollection.find().sort({ _id: -1 }).toArray()
   res.send(result)
-
+  
 })
  // get all products added by a spacific user
- app.get('/products/:email',async(req,res)=>{
+ app.get('/products/:email', verifyToken,async(req,res)=>{
+  // const token = req.cookies?.token
+  
+  // console.log(token)
+  const tokenData = req.user
+  console.log(tokenData, 'from token')
   const email = req.params.email
   const query = {'queryUser.email':email}
 
@@ -59,7 +111,9 @@ async function run() {
   res.send(result)
 })
 // get a single product data from db using id
-app.get('/product/:id', async(req,res)=>{
+app.get('/product/:id', verifyToken, async(req,res)=>{
+  const tokenData = req.user
+  console.log(tokenData, 'from details')
   const id = req.params.id
   const query = {_id: new ObjectId(id)}
   const result = await productsCollection.findOne(query)
@@ -74,7 +128,10 @@ app.delete('/product/:id',async(req,res)=>{
       res.send(result)
    })
   //  update a product data 
-  app.put('/product/:id', async(req,res)=>{
+  app.put('/product/:id', verifyToken,  async(req,res)=>{
+    const tokenData = req.user
+    console.log(tokenData, 'all up')
+   
     const id = req.params.id
     const productData = req.body
     const query = {_id: new ObjectId(id)}
@@ -122,7 +179,9 @@ app.delete('/product/:id',async(req,res)=>{
 
 
  // get all recommend for a spacific data
- app.get('/recommend/:id', async(req,res)=>{
+ app.get('/recommend/:id', verifyToken, async(req,res)=>{
+  const tokenData = req.user
+  console.log(tokenData, 'all recommend')
   const id = req.params.id
   const query = {'queryId':id}
   const result = await recommendsCollection.find(query).toArray()
@@ -130,7 +189,9 @@ app.delete('/product/:id',async(req,res)=>{
 
 })
 // get all recommend of a spacific user
-app.get('/my-recommend/:email',async(req,res)=>{
+app.get('/my-recommend/:email',verifyToken,async(req,res)=>{
+  const tokenData = req.user
+  console.log(tokenData, 'my recommend')
   const email = req.params.email
  
   const query = {'recommenderEmail': email}
@@ -152,7 +213,9 @@ app.delete('/recommend/:id',async(req,res)=>{
       res.send(result)
    })
    // get all recommends by others for a user
-app.get('/all-recommend/:email',async(req,res)=>{
+app.get('/all-recommend/:email', verifyToken,async(req,res)=>{
+  const tokenData = req.user
+  console.log(tokenData, 'from recommend')
   const email = req.params.email
  
   const query = {'userEmail':email}
