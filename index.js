@@ -212,15 +212,26 @@ app.get('/my-recommend/:email',verifyToken,async(req,res)=>{
   res.send(result)
 })
 // delete recommend data from db
-app.delete('/recommend/:id',async(req,res)=>{
-  const id = req.params.id
-  const query = {_id: new ObjectId(id)}
-  const result = await recommendsCollection.deleteOne(query)
-  // const recoQuery = {_id:new ObjectId(id)}
-    const updateRecoCount = await productsCollection.updateOne(query,{ $inc: { recommendationCount: -1 } })
-    console.log(updateRecoCount)
-      res.send(result)
-   })
+app.delete('/recommend/:id', async (req, res) => {
+  try {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const deletedRecommendation = await recommendsCollection.findOneAndDelete(query);
+
+      if (deletedRecommendation) {
+          const recoQuery = { _id: new ObjectId(deletedRecommendation.queryId) };
+          const updateRecoCount = await productsCollection.updateOne(recoQuery, { $inc: { recommendationCount: -1 } });
+          console.log(updateRecoCount);
+          res.send({ success: true, message: 'Recommendation deleted successfully' });
+      } else {
+          res.status(404).send({ success: false, message: 'Recommendation not found' });
+      }
+  } catch (error) {
+      console.error(error);
+      res.status(500).send({ success: false, message: 'Internal server error' });
+  }
+});
+
    // get all recommends by others for a user
 app.get('/all-recommend/:email', verifyToken,async(req,res)=>{
   const tokenEmail = req.user.email
