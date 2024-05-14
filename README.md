@@ -11,7 +11,7 @@ A website for alternative information for a product.If anyone buy a product and 
 # Features
 
 - This websites design is based on glassmorphism website design.
-- By this website one can ask query, recommend for a query.
+- On this website one can ask query, recommend for a query.
 - In this website data is stored in mongodb. 
 - In this website different types of npm package's  has used Swiper slider, Lottie reacts, React awesome reveal etc.
 - In this website meraki ui components are used.
